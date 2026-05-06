@@ -1,0 +1,8 @@
+{
+  "tools": [
+    "search_pubmed",
+    "search_fda_drug",
+    "search_medlineplus",
+    "search_icd"
+  ]
+}
