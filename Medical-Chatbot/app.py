@@ -1,45 +1,58 @@
 import os
 import json
+
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage
 
-
-import os
-from dotenv import load_dotenv
-
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("❌ GROQ_API_KEY not loaded")
-VECTOR_PATH = "vectorstore"
+
+if GROQ_API_KEY is None:
+    raise RuntimeError("GROQ_API_KEY environment variable not found.")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+VECTOR_PATH = os.path.join(BASE_DIR, "vectorstore")
 
 MODEL_NAME = "llama-3.3-70b-versatile"
-print("Loaded key:", GROQ_API_KEY)
+print("✅ GROQ API Key Loaded")
 
 
 
-print("Loading embeddings...")
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+try:
+    print("Loading embedding model...")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
 
-print("Loading vector DB...")
-vectorstore = FAISS.load_local(VECTOR_PATH, embeddings, allow_dangerous_deserialization=True)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+    print("Loading FAISS vector database...")
+    vectorstore = FAISS.load_local(
+        VECTOR_PATH,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
 
-print("Loading LLM...")
-llm = ChatGroq(
-    model=MODEL_NAME,
-    temperature=0.2,
-    max_tokens=1000,
-    groq_api_key=GROQ_API_KEY   
-)
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
-print(" Ready")
+    print("Initializing Groq LLM...")
+    llm = ChatGroq(
+        model=MODEL_NAME,
+        temperature=0.2,
+        max_tokens=1000,
+        groq_api_key=GROQ_API_KEY
+    )
+
+    print("✅ MediBot is ready.")
+
+except Exception as e:
+    print(f"❌ Startup Error: {e}")
+    raise
 
 
 def get_rag_context(query):
@@ -134,6 +147,9 @@ CORS(app)
 def index():
     return render_template("index.html")
 
+@app.route("/health")
+def health():
+    return jsonify({"status": "healthy"}), 200
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -153,9 +169,11 @@ def chat():
 
 
 if __name__ == "__main__":
+
+    port = int(os.environ.get("PORT", 5000))
+
     app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=False,
-        use_reloader=False
+        host="0.0.0.0",
+        port=port,
+        debug=False
     )

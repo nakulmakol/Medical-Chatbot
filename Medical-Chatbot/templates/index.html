@@ -20,16 +20,23 @@
     --muted:   #6b748a;
     --fh:      'Syne', sans-serif;
     --fb:      'DM Sans', sans-serif;
+    --sidebar-w: 260px;
   }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--fb); overflow: hidden; }
 
-  .layout { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+  /* ── Layout ── */
+  .layout { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100vh; }
 
-  /* Sidebar */
+  /* ── Sidebar ── */
   .sidebar {
     background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 28px 20px; gap: 28px; overflow-y: auto;
+    display: flex; flex-direction: column; padding: 28px 20px; gap: 28px;
+    overflow-y: auto; transition: transform .3s ease;
+    /* mobile: fixed overlay */
   }
+  .sidebar::-webkit-scrollbar { width: 3px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon {
     width: 42px; height: 42px;
@@ -39,6 +46,14 @@
   }
   .logo-text { font-family: var(--fh); font-weight: 800; font-size: 1.3rem; }
   .logo-text span { color: var(--accent); }
+
+  /* Close button inside sidebar (mobile only) */
+  .sidebar-close {
+    display: none; margin-left: auto; background: none; border: none;
+    color: var(--muted); font-size: 1.3rem; cursor: pointer; padding: 2px 6px;
+    border-radius: 6px; transition: color .2s;
+  }
+  .sidebar-close:hover { color: var(--accent3); }
 
   .sidebar-label {
     font-family: var(--fh); font-size: .65rem; font-weight: 700;
@@ -64,7 +79,8 @@
     padding: 10px 14px; color: var(--text); font-family: var(--fb); font-size: .82rem;
     cursor: pointer; text-align: left; transition: all .2s;
   }
-  .quick-btn:hover { border-color: var(--accent); background: rgba(0,229,160,.06); color: var(--accent); }
+  .quick-btn:hover  { border-color: var(--accent); background: rgba(0,229,160,.06); color: var(--accent); }
+  .quick-btn:active { transform: scale(.97); }
 
   .disclaimer {
     margin-top: auto; background: rgba(255,77,109,.06);
@@ -73,63 +89,84 @@
   }
   .disclaimer strong { display: block; margin-bottom: 4px; color: var(--accent3); }
 
-  /* Main */
-  .main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  /* Overlay backdrop (mobile) */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    z-index: 90; backdrop-filter: blur(2px); animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* ── Main ── */
+  .main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; min-width: 0; }
 
   .chat-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 32px; border-bottom: 1px solid var(--border);
-    background: var(--surface); flex-shrink: 0;
+    padding: 16px 28px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0; gap: 12px;
   }
-  .chat-title { font-family: var(--fh); font-weight: 700; font-size: 1.1rem; }
-  .chat-sub   { font-size: .78rem; color: var(--muted); margin-top: 1px; }
+  .header-left  { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  /* Hamburger (hidden on desktop) */
+  .hamburger {
+    display: none; background: none; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--muted); cursor: pointer;
+    width: 36px; height: 36px; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .2s;
+  }
+  .hamburger:hover { border-color: var(--accent); color: var(--accent); }
+  .hamburger svg  { width: 18px; height: 18px; fill: currentColor; }
+
+  .chat-title { font-family: var(--fh); font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-sub   { font-size: .75rem; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .status-badge {
     display: flex; align-items: center; gap: 6px;
     background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.2);
-    border-radius: 20px; padding: 4px 12px; font-size: .75rem; color: var(--accent); font-weight: 500;
+    border-radius: 20px; padding: 4px 10px; font-size: .73rem; color: var(--accent); font-weight: 500;
+    white-space: nowrap;
   }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
   .clear-btn {
     background: transparent; border: 1px solid var(--border); color: var(--muted);
-    border-radius: 8px; padding: 7px 14px; font-size: .78rem; cursor: pointer;
-    font-family: var(--fb); transition: all .2s;
+    border-radius: 8px; padding: 6px 12px; font-size: .75rem; cursor: pointer;
+    font-family: var(--fb); transition: all .2s; white-space: nowrap;
   }
   .clear-btn:hover { border-color: var(--accent3); color: var(--accent3); }
 
-  /* Messages */
+  /* ── Messages ── */
   .messages {
-    flex: 1; overflow-y: auto; padding: 32px;
-    display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
+    flex: 1; overflow-y: auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
   }
   .messages::-webkit-scrollbar { width: 4px; }
   .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
   .welcome {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    flex: 1; text-align: center; gap: 16px; padding: 40px; animation: fadeUp .6s ease both;
+    flex: 1; text-align: center; gap: 14px; padding: 32px 24px; animation: fadeUp .6s ease both;
   }
-  .welcome-icon { font-size: 3.5rem; filter: drop-shadow(0 0 24px rgba(0,229,160,.4)); }
+  .welcome-icon { font-size: 3rem; filter: drop-shadow(0 0 24px rgba(0,229,160,.4)); }
   .welcome h2 {
-    font-family: var(--fh); font-size: 1.8rem; font-weight: 800;
+    font-family: var(--fh); font-size: clamp(1.4rem, 5vw, 1.8rem); font-weight: 800;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .welcome p { color: var(--muted); max-width: 400px; font-size: .9rem; }
+  .welcome p { color: var(--muted); max-width: 360px; font-size: .88rem; line-height: 1.6; }
 
-  .row { display: flex; gap: 14px; animation: fadeUp .35s ease both; max-width: 900px; }
+  .row { display: flex; gap: 10px; animation: fadeUp .35s ease both; max-width: 860px; }
   .row.user { flex-direction: row-reverse; margin-left: auto; }
   .row.bot  { margin-right: auto; }
 
   .avatar {
-    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 1rem; align-self: flex-end;
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: .9rem; align-self: flex-end;
   }
   .avatar.bot  { background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 0 14px rgba(0,229,160,.3); }
   .avatar.user { background: linear-gradient(135deg, var(--accent2), #7b5fff); box-shadow: 0 0 14px rgba(0,149,255,.3); }
 
   .bubble {
-    padding: 14px 18px; border-radius: 18px; font-size: .9rem; line-height: 1.7;
-    max-width: 680px; word-break: break-word;
+    padding: 12px 16px; border-radius: 18px; font-size: .88rem; line-height: 1.7;
+    max-width: min(640px, calc(100vw - 90px)); word-break: break-word;
   }
   .bubble.user { background: #0d1f38; border: 1px solid #1a3a5c; border-bottom-right-radius: 4px; }
   .bubble.bot  { background: #0d1a12; border: 1px solid #1a3020; border-bottom-left-radius: 4px; }
@@ -140,16 +177,16 @@
   .warn-line {
     margin-top: 12px; padding-top: 10px;
     border-top: 1px solid var(--border);
-    font-size: .8rem; color: var(--muted); font-style: italic;
+    font-size: .78rem; color: var(--muted); font-style: italic;
   }
   .err-bubble {
     background: rgba(255,77,109,.08); border: 1px solid rgba(255,77,109,.25);
     color: #ff9aaa; border-radius: 12px; padding: 12px 16px; font-size: .85rem;
-    max-width: 480px;
+    max-width: min(480px, calc(100vw - 48px));
   }
 
-  /* Typing */
-  .typing { display: flex; align-items: center; gap: 5px; padding: 14px 18px !important; }
+  /* Typing indicator */
+  .typing { display: flex; align-items: center; gap: 5px; padding: 14px 16px !important; }
   .typing span {
     width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
     animation: bounce .9s ease-in-out infinite; opacity: .6;
@@ -158,19 +195,21 @@
   .typing span:nth-child(3) { animation-delay: .3s; }
   @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.6} 30%{transform:translateY(-6px);opacity:1} }
 
-  /* Input */
-  .input-bar { padding: 16px 28px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  /* ── Input bar ── */
+  .input-bar { padding: 14px 20px 18px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
   .input-wrap {
     display: flex; align-items: flex-end; gap: 10px;
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 10px 10px 10px 18px;
+    border-radius: 14px; padding: 8px 8px 8px 16px;
     transition: border-color .2s, box-shadow .2s;
   }
   .input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,160,.08); }
   textarea {
     flex: 1; background: none; border: none; outline: none;
     color: var(--text); font-family: var(--fb); font-size: .9rem;
-    line-height: 1.5; resize: none; min-height: 24px; max-height: 160px;
+    line-height: 1.5; resize: none; min-height: 24px; max-height: 140px;
+    /* prevent zoom on iOS */
+    font-size: max(16px, .9rem);
   }
   textarea::placeholder { color: var(--muted); }
   .send-btn {
@@ -179,29 +218,84 @@
     border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all .2s; box-shadow: 0 4px 14px rgba(0,229,160,.3);
+    /* bigger tap target on touch */
+    min-width: 44px; min-height: 44px;
   }
   .send-btn:hover   { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,229,160,.45); }
   .send-btn:active  { transform: scale(.96); }
   .send-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
   .send-btn svg { width: 18px; height: 18px; fill: #07080d; }
-  .input-hint { font-size: .72rem; color: var(--muted); margin-top: 8px; padding-left: 2px; }
+  .input-hint { font-size: .7rem; color: var(--muted); margin-top: 7px; padding-left: 2px; }
 
-  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-  @media(max-width:768px){
-    .layout{grid-template-columns:1fr} .sidebar{display:none}
-    .messages{padding:20px} .input-bar{padding:14px 16px 18px}
+  /* ─────────────────────────────────────────
+     MOBILE BREAKPOINT  ≤ 767px
+  ───────────────────────────────────────── */
+  @media (max-width: 767px) {
+    /* Single-column layout */
+    .layout { grid-template-columns: 1fr; }
+
+    /* Sidebar becomes fixed drawer */
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0;
+      width: min(var(--sidebar-w), 85vw);
+      z-index: 100;
+      transform: translateX(-110%);
+      padding: 20px 16px;
+      gap: 22px;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: flex; align-items: center; }
+
+    /* Overlay appears when sidebar is open */
+    .overlay.open { display: block; }
+
+    /* Show hamburger */
+    .hamburger { display: flex; }
+
+    /* Header tighter */
+    .chat-header { padding: 12px 16px; }
+    .chat-sub    { display: none; }
+
+    /* Status badge: hide label text on very small screens */
+    @media (max-width: 380px) {
+      .status-badge { padding: 4px 8px; }
+    }
+
+    /* Messages */
+    .messages { padding: 16px; gap: 16px; }
+
+    /* Bubbles full-width friendly */
+    .bubble { font-size: .86rem; padding: 10px 14px; }
+
+    /* Input bar */
+    .input-bar { padding: 10px 12px 14px; }
+    .input-hint { display: none; }
+    textarea { font-size: 16px; } /* prevent iOS zoom */
+  }
+
+  /* Small desktop / tablet  768–1023px */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    :root { --sidebar-w: 220px; }
+    .chat-header { padding: 14px 22px; }
+    .messages    { padding: 22px; }
   }
 </style>
 </head>
 <body>
+
+<!-- Overlay backdrop (mobile) -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
 <div class="layout">
 
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="logo">
       <div class="logo-icon">🩺</div>
       <div class="logo-text">Medi<span>Bot</span></div>
+      <button class="sidebar-close" id="sidebarClose" onclick="closeSidebar()" aria-label="Close menu">✕</button>
     </div>
 
     <div>
@@ -234,13 +328,19 @@
   <!-- Main -->
   <main class="main">
     <div class="chat-header">
-      <div>
-        <div class="chat-title">Medical Assistant</div>
-        <div class="chat-sub">Powered by LLaMA 3.3 · 5 knowledge sources</div>
+      <div class="header-left">
+        <!-- Hamburger (mobile) -->
+        <button class="hamburger" id="hamburger" onclick="openSidebar()" aria-label="Open menu">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+        </button>
+        <div>
+          <div class="chat-title">Medical Assistant</div>
+          <div class="chat-sub">Powered by LLaMA 3.3 · 5 knowledge sources</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div class="header-right">
         <div class="status-badge"><span class="status-dot"></span>Online</div>
-        <button class="clear-btn" onclick="clearChat()">Clear chat</button>
+        <button class="clear-btn" onclick="clearChat()">Clear</button>
       </div>
     </div>
 
@@ -256,40 +356,56 @@
       <div class="input-wrap">
         <textarea id="input" placeholder="Ask a medical question…" rows="1"
           onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
-      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+      <div class="input-hint">Enter to send · Shift+Enter for new line</div>
     </div>
   </main>
 </div>
 
 <script>
-  const msgsEl   = document.getElementById('messages');
-  const inputEl  = document.getElementById('input');
-  const sendBtn  = document.getElementById('sendBtn');
-  const welcomeEl= document.getElementById('welcome');
-  let   busy     = false;
+  const msgsEl    = document.getElementById('messages');
+  const inputEl   = document.getElementById('input');
+  const sendBtn   = document.getElementById('sendBtn');
+  const welcomeEl = document.getElementById('welcome');
+  const sidebar   = document.getElementById('sidebar');
+  const overlay   = document.getElementById('overlay');
+  let   busy      = false;
 
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  /* ── Sidebar ── */
+  function openSidebar()  {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
   }
 
+  /* Close sidebar on Esc */
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+  /* ── Textarea ── */
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
-  // ── Quick question buttons ────────────────────────────────────────────────
+  /* ── Quick questions ── */
   function quickAsk(btn) {
     if (busy) return;
-    const text = btn.innerText.trim();
-    if (!text) return;
-    // Pass text directly to avoid any timing issue with inputEl
-    sendWithText(text);
+    closeSidebar();
+    sendWithText(btn.innerText.trim());
   }
 
+  /* ── Clear ── */
   function clearChat() {
     msgsEl.innerHTML = '';
     msgsEl.appendChild(welcomeEl);
@@ -300,73 +416,56 @@
     msgsEl.scrollTo({ top: msgsEl.scrollHeight, behavior: 'smooth' });
   }
 
-  // ── Add user bubble ───────────────────────────────────────────────────────
+  /* ── User bubble ── */
   function addUser(text) {
     welcomeEl.style.display = 'none';
-    const row    = document.createElement('div');
-    row.className= 'row user';
-    const av     = document.createElement('div');
-    av.className = 'avatar user'; av.textContent = '👤';
-    const bub    = document.createElement('div');
-    bub.className= 'bubble user'; bub.textContent = text;
-    row.appendChild(av); row.appendChild(bub);
-    msgsEl.appendChild(row); scrollBottom();
+    const row = make('div', 'row user');
+    const av  = make('div', 'avatar user'); av.textContent = '👤';
+    const bub = make('div', 'bubble user'); bub.textContent = text;
+    row.append(av, bub); msgsEl.appendChild(row); scrollBottom();
   }
 
-  // ── Add bot bubble ────────────────────────────────────────────────────────
+  /* ── Bot bubble ── */
   function addBot(text) {
-    const row    = document.createElement('div');
-    row.className= 'row bot';
-    const av     = document.createElement('div');
-    av.className = 'avatar bot'; av.textContent = '🩺';
-    const bub    = document.createElement('div');
-    bub.className= 'bubble bot';
-
-    // Split disclaimer line
+    const row = make('div', 'row bot');
+    const av  = make('div', 'avatar bot'); av.textContent = '🩺';
+    const bub = make('div', 'bubble bot');
     const marker = '⚕️';
-    const idx    = text.lastIndexOf(marker);
-    let main     = text, warn = '';
+    const idx = text.lastIndexOf(marker);
+    let main = text, warn = '';
     if (idx !== -1) { main = text.slice(0, idx).trim(); warn = text.slice(idx).trim(); }
-
     bub.innerHTML = fmtText(main) + (warn ? `<div class="warn-line">${warn}</div>` : '');
-    row.appendChild(av); row.appendChild(bub);
-    msgsEl.appendChild(row); scrollBottom();
+    row.append(av, bub); msgsEl.appendChild(row); scrollBottom();
   }
 
-  // ── Add error bubble ──────────────────────────────────────────────────────
+  /* ── Error bubble ── */
   function addErr(msg) {
-    const d = document.createElement('div');
-    d.className = 'err-bubble';
+    const d = make('div', 'err-bubble');
     d.textContent = '⚠️ ' + msg;
     msgsEl.appendChild(d); scrollBottom();
   }
 
-  // ── Typing indicator ──────────────────────────────────────────────────────
+  /* ── Typing indicator ── */
   function showTyping() {
     welcomeEl.style.display = 'none';
-    const row    = document.createElement('div');
-    row.className= 'row bot'; row.id = 'typr';
-    const av     = document.createElement('div');
-    av.className = 'avatar bot'; av.textContent = '🩺';
-    const bub    = document.createElement('div');
-    bub.className= 'bubble bot typing';
-    bub.innerHTML= '<span></span><span></span><span></span>';
-    row.appendChild(av); row.appendChild(bub);
-    msgsEl.appendChild(row); scrollBottom();
+    const row = make('div', 'row bot'); row.id = 'typr';
+    const av  = make('div', 'avatar bot'); av.textContent = '🩺';
+    const bub = make('div', 'bubble bot typing');
+    bub.innerHTML = '<span></span><span></span><span></span>';
+    row.append(av, bub); msgsEl.appendChild(row); scrollBottom();
   }
-  function hideTyping() {
-    const t = document.getElementById('typr'); if (t) t.remove();
-  }
+  function hideTyping() { const t = document.getElementById('typr'); if (t) t.remove(); }
 
-  // ── Format text ───────────────────────────────────────────────────────────
+  /* ── Format text ── */
   function fmtText(t) {
     t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    return t.split(/\n{2,}/)
-            .map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`)
-            .join('');
+    return t.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
   }
 
-  // ── SEND MESSAGE (from input box) ──────────────────────────────────────
+  /* ── Helper ── */
+  function make(tag, cls) { const el = document.createElement(tag); el.className = cls; return el; }
+
+  /* ── Send from input box ── */
   function sendMessage() {
     const q = inputEl.value.trim();
     if (!q || busy) return;
@@ -375,38 +474,26 @@
     sendWithText(q);
   }
 
-  // ── CORE SEND — used by both input box and quick buttons ────────────────
+  /* ── Core send ── */
   async function sendWithText(q) {
     if (!q || busy) return;
-    busy = true;
-    sendBtn.disabled = true;
-
-    addUser(q);
-    showTyping();
-
+    busy = true; sendBtn.disabled = true;
+    addUser(q); showTyping();
     try {
-      const res = await fetch('/chat', {
+      const res  = await fetch('/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ question: q })
       });
-
       const data = await res.json();
       hideTyping();
-      if (data.error) { addErr(data.error); }
-      else            { addBot(data.answer); }
-
+      data.error ? addErr(data.error) : addBot(data.answer);
     } catch (err) {
       console.error('Fetch error:', err);
       hideTyping();
       addErr('Connection error — is app.py running on port 5000?');
     } finally {
-      busy = false;
-      sendBtn.disabled = false;
-      inputEl.focus();
+      busy = false; sendBtn.disabled = false; inputEl.focus();
     }
   }
 </script>
