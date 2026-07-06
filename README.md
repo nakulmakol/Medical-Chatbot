@@ -1,7 +1,4 @@
 # MediBot-an AI medical chatbot
-<img width="2872" height="1538" alt="image" src="https://github.com/user-attachments/assets/825ee2f7-fd9f-42ea-b40e-4cce68e8f76f" />
-# 🩺 MediBot AI – Intelligent Medical Chatbot
-
 An AI-powered medical chatbot that leverages **Retrieval-Augmented Generation (RAG)**, **LangChain**, **FAISS**, and **Groq Llama 3.3 70B** to deliver context-aware responses to medical queries using a curated medical knowledge base.
 
 ---
@@ -23,6 +20,7 @@ Instead of relying solely on an LLM, the chatbot first retrieves the most releva
 The project demonstrates the practical implementation of Retrieval-Augmented Generation (RAG) in healthcare applications.
 
 ---
+<img width="2872" height="1538" alt="image" src="https://github.com/user-attachments/assets/825ee2f7-fd9f-42ea-b40e-4cce68e8f76f" />
 
 ## ✨ Features
 
