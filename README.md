@@ -228,8 +228,8 @@ It does **not** replace professional medical advice, diagnosis, or treatment. Al
 
 **Nakul Makol**
 
-- GitHub: https://github.com/nakulmakol
-- LinkedIn: *(Add your LinkedIn profile URL here)*
+- GitHub: **https://github.com/nakulmakol**
+- LinkedIn: **https://www.linkedin.com/in/nakul-makol-b3abb6310/**
 
 ---
 
