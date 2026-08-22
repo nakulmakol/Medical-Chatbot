@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 VECTOR_PATH = os.path.join(BASE_DIR, "vectorstore")
 
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME = "openai/gpt-oss-120b"
 print("✅ GROQ API Key Loaded")
 
 
