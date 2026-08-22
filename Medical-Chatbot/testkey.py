@@ -6,5 +6,5 @@ load_dotenv()
 
 print("Key:", os.getenv("GROQ_API_KEY"))
 
-llm = ChatGroq(model="llama-3.3-70b-versatile")
+llm = ChatGroq(model="openai/gpt-oss-120b")
 print(llm.invoke("Say hello").content)
